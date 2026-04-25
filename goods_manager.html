@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>グッズ管理</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #faf9f7;
+    --surface: #ffffff;
+    --surface2: #f3f2ef;
+    --border: #e0ddd8;
+    --border2: #ccc9c3;
+    --text: #1a1917;
+    --text2: #6b6861;
+    --text3: #a09d97;
+    --accent: #2d2d2d;
+    --danger: #c0392b;
+    --danger-bg: #fdf0ef;
+    --danger-border: #f5c6c3;
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+
+  body {
+    font-family: -apple-system, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', sans-serif;
+    font-size: 14px;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* ヘッダー */
+  .app-header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 16px 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .app-title {
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+    margin-bottom: 12px;
+    color: var(--text);
+  }
+
+  /* タブ */
+  .tabs {
+    display: flex;
+    gap: 0;
+  }
+  .tab {
+    flex: 1;
+    text-align: center;
+    padding: 9px 0 10px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text3);
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: color 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+  .tab.active {
+    color: var(--text);
+    border-bottom-color: var(--accent);
+  }
+
+  /* パネル */
+  .panel { display: none; padding: 16px; }
+  .panel.active { display: block; }
+
+  /* サマリーバー */
+  .summary-bar {
+    background: var(--accent);
+    color: #fff;
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 14px;
+  }
+  .summary-label {
+    font-size: 11px;
+    opacity: 0.7;
+    margin-bottom: 4px;
+    letter-spacing: 0.3px;
+  }
+  .summary-amount {
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+  }
+  .summary-items {
+    font-size: 11px;
+    opacity: 0.75;
+    margin-top: 6px;
+    line-height: 1.7;
+  }
+
+  /* グッズカード */
+  .goods-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px;
+    margin-bottom: 10px;
+    transition: border-color 0.15s;
+  }
+  .goods-card.checked {
+    border-color: var(--accent);
+  }
+
+  .card-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .check-area {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .check-area input[type=checkbox] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--accent);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .card-img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .card-img-empty {
+    width: 60px;
+    height: 60px;
+    border-radius: var(--radius-sm);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: var(--text3);
+    text-align: center;
+    line-height: 1.4;
+  }
+  .card-meta {
+    flex: 1;
+    min-width: 0;
+  }
+  .card-name {
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 2px;
+    line-height: 1.3;
+  }
+  .card-desc {
+    font-size: 12px;
+    color: var(--text2);
+    margin-bottom: 4px;
+  }
+  .card-price {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+  }
+
+  /* フィールド行 */
+  .field-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .field-label {
+    font-size: 11px;
+    color: var(--text2);
+    min-width: 44px;
+    flex-shrink: 0;
+  }
+  .field-input {
+    flex: 1;
+  }
+  .field-input input[type=number],
+  .field-input textarea {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 7px 10px;
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--text);
+    background: var(--surface);
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .field-input input[type=number]:focus,
+  .field-input textarea:focus {
+    border-color: var(--accent);
+  }
+  .field-input textarea {
+    resize: none;
+    min-height: 44px;
+    line-height: 1.5;
+  }
+
+  /* 譲渡セクション */
+  .transfer-section {
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    margin-top: 8px;
+    margin-bottom: 8px;
+  }
+  .transfer-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text2);
+    margin-bottom: 8px;
+    letter-spacing: 0.3px;
+  }
+  .transfer-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .transfer-qty-input {
+    width: 72px;
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    padding: 6px 8px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--text);
+    background: var(--surface);
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+    text-align: center;
+  }
+  .transfer-qty-input:focus {
+    border-color: var(--accent);
+  }
+  .transfer-qty-input.over {
+    border-color: var(--danger);
+    color: var(--danger);
+    background: var(--danger-bg);
+  }
+  .transfer-stock-info {
+    font-size: 12px;
+    color: var(--text2);
+  }
+  .over-msg {
+    font-size: 11px;
+    color: var(--danger);
+    margin-top: 4px;
+    font-weight: 500;
+  }
+
+  /* 削除ボタン */
+  .delete-btn {
+    display: block;
+    width: 100%;
+    margin-top: 8px;
+    padding: 7px;
+    font-size: 12px;
+    font-family: inherit;
+    color: var(--danger);
+    background: var(--danger-bg);
+    border: 1px solid var(--danger-border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    text-align: center;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* 空メッセージ */
+  .empty-msg {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--text3);
+    font-size: 13px;
+    line-height: 1.8;
+  }
+
+  /* 登録フォーム */
+  .form-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .form-section-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text2);
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+  }
+  .form-field {
+    margin-bottom: 12px;
+  }
+  .form-label {
+    display: block;
+    font-size: 12px;
+    color: var(--text2);
+    margin-bottom: 5px;
+    font-weight: 500;
+  }
+  .form-input {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--text);
+    background: var(--surface);
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .form-input:focus {
+    border-color: var(--accent);
+  }
+  .form-input[type=number] {
+    -moz-appearance: textfield;
+  }
+  .img-upload-area {
+    width: 100%;
+    height: 130px;
+    border: 1.5px dashed var(--border2);
+    border-radius: var(--radius);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text3);
+    font-size: 13px;
+    gap: 6px;
+    background: var(--surface2);
+    -webkit-tap-highlight-color: transparent;
+    transition: border-color 0.15s;
+  }
+  .img-upload-area:active {
+    border-color: var(--accent);
+  }
+  .upload-icon {
+    font-size: 28px;
+    line-height: 1;
+  }
+  .preview-img {
+    width: 100%;
+    height: 130px;
+    object-fit: cover;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    display: none;
+    cursor: pointer;
+  }
+  .img-hint {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 4px;
+  }
+
+  .register-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 15px;
+    font-family: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: opacity 0.15s;
+  }
+  .register-btn:active {
+    opacity: 0.8;
+  }
+
+  /* 共有タブ */
+  #panel-share {
+    padding: 12px 12px 0;
+  }
+  .share-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-bottom: 0;
+  }
+  .share-item {
+    display: flex;
+    flex-direction: column;
+  }
+  .share-img {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    display: block;
+  }
+  .share-img-empty {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 4px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    color: var(--text3);
+  }
+  .share-qty {
+    font-size: 11px;
+    font-weight: 600;
+    text-align: center;
+    margin-top: 3px;
+    padding: 3px 2px;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    background: var(--surface);
+    color: var(--text);
+    letter-spacing: 0.2px;
+  }
+  .share-spacer {
+    height: 80px;
+  }
+  .share-copy-section {
+    padding: 12px;
+    border-top: 1px solid var(--border);
+    background: var(--bg);
+  }
+  .share-copy-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text2);
+    margin-bottom: 6px;
+    letter-spacing: 0.3px;
+  }
+  .share-copy-box {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--text);
+    background: var(--surface);
+    resize: none;
+    min-height: 60px;
+    line-height: 1.6;
+    outline: none;
+  }
+  .share-copy-box:focus {
+    border-color: var(--accent);
+  }
+  .copy-btn {
+    width: 100%;
+    margin-top: 8px;
+    padding: 10px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-family: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .copy-btn:active { opacity: 0.8; }
+  .share-empty {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--text3);
+    font-size: 13px;
+    line-height: 1.8;
+  }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="app-title">グッズ管理</div>
+  <div class="tabs">
+    <div class="tab active" id="tab-list" onclick="switchTab('list')">一覧・在庫</div>
+    <div class="tab" id="tab-register" onclick="switchTab('register')">＋ 登録</div>
+    <div class="tab" id="tab-share" onclick="switchTab('share')">共有</div>
+  </div>
+</div>
+
+<!-- 一覧タブ -->
+<div class="panel active" id="panel-list">
+  <div class="summary-bar">
+    <div class="summary-label">チェックしたグッズの合計金額</div>
+    <div class="summary-amount" id="summary-amount">¥0</div>
+    <div class="summary-items" id="summary-items">グッズにチェックを入れると表示されます</div>
+  </div>
+  <div id="goods-list"></div>
+</div>
+
+<!-- 登録タブ -->
+<div class="panel" id="panel-register">
+
+  <div class="form-section">
+    <div class="form-section-title">画像</div>
+    <div class="form-field">
+      <input type="file" id="img-input" accept="image/*" style="display:none" onchange="handleImage(this)">
+      <div class="img-upload-area" id="img-placeholder" onclick="document.getElementById('img-input').click()">
+        <span class="upload-icon">🖼</span>
+        <span>タップして画像を選択</span>
+      </div>
+      <img class="preview-img" id="img-preview" onclick="document.getElementById('img-input').click()">
+      <div class="img-hint">※ 高解像度の写真を大量登録すると容量が増えます</div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title">グッズ情報</div>
+    <div class="form-field">
+      <label class="form-label">キャラクター名 <span style="color:#c0392b">*</span></label>
+      <input type="text" class="form-input" id="reg-name" placeholder="例：田中花子">
+    </div>
+    <div class="form-field">
+      <label class="form-label">グッズ名・説明（任意）</label>
+      <input type="text" class="form-input" id="reg-desc" placeholder="例：アクリルスタンド">
+    </div>
+    <div class="form-field">
+      <label class="form-label">金額（円）</label>
+      <input type="number" class="form-input" id="reg-price" placeholder="0" min="0" inputmode="numeric">
+    </div>
+    <div class="form-field" style="margin-bottom:0">
+      <label class="form-label">在庫数</label>
+      <input type="number" class="form-input" id="reg-stock" value="1" min="0" inputmode="numeric">
+    </div>
+  </div>
+
+  <button class="register-btn" onclick="registerGoods()">登録する</button>
+  <div style="height:32px"></div>
+</div>
+
+<!-- 共有タブ -->
+<div class="panel" id="panel-share">
+  <div id="share-grid-wrap"></div>
+  <div class="share-spacer"></div>
+  <div class="share-copy-section">
+    <div class="share-copy-label">コピペ用フォーム</div>
+    <textarea class="share-copy-box" id="share-copy-text" readonly placeholder="一覧タブでチェックを入れたグッズのキャラクター名が表示されます"></textarea>
+    <button class="copy-btn" onclick="copyText()">コピーする</button>
+  </div>
+</div>
+
+<script>
+var goods = [];
+var imgData = null;
+
+function loadGoods() {
+  try { goods = JSON.parse(localStorage.getItem('goods_mgr_v1') || '[]'); } catch(e) { goods = []; }
+}
+
+function saveGoods() {
+  try {
+    localStorage.setItem('goods_mgr_v1', JSON.stringify(goods));
+  } catch(e) {
+    alert('保存容量が不足しています。不要なグッズを削除するか、画像サイズを小さくしてください。');
+  }
+}
+
+function switchTab(t) {
+  document.getElementById('tab-list').classList.toggle('active', t === 'list');
+  document.getElementById('tab-register').classList.toggle('active', t === 'register');
+  document.getElementById('tab-share').classList.toggle('active', t === 'share');
+  document.getElementById('panel-list').classList.toggle('active', t === 'list');
+  document.getElementById('panel-register').classList.toggle('active', t === 'register');
+  document.getElementById('panel-share').classList.toggle('active', t === 'share');
+  if (t === 'list') renderList();
+  if (t === 'share') renderShare();
+}
+
+function handleImage(input) {
+  var file = input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    imgData = e.target.result;
+    var preview = document.getElementById('img-preview');
+    preview.src = imgData;
+    preview.style.display = 'block';
+    document.getElementById('img-placeholder').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+function registerGoods() {
+  var name = document.getElementById('reg-name').value.trim();
+  var desc = document.getElementById('reg-desc').value.trim();
+  var price = parseInt(document.getElementById('reg-price').value) || 0;
+  var stock = parseInt(document.getElementById('reg-stock').value) || 1;
+  if (!name) { alert('キャラクター名を入力してください'); return; }
+
+  goods.push({
+    id: Date.now(),
+    name: name,
+    desc: desc,
+    price: price,
+    stock: stock,
+    qty: stock,
+    memo: '',
+    img: imgData || null,
+    checked: false,
+    transferQty: 1
+  });
+  saveGoods();
+
+  document.getElementById('reg-name').value = '';
+  document.getElementById('reg-desc').value = '';
+  document.getElementById('reg-price').value = '';
+  document.getElementById('reg-stock').value = '1';
+  document.getElementById('img-preview').style.display = 'none';
+  document.getElementById('img-placeholder').style.display = 'flex';
+  document.getElementById('img-input').value = '';
+  imgData = null;
+
+  switchTab('list');
+}
+
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function renderList() {
+  var el = document.getElementById('goods-list');
+  if (!goods.length) {
+    el.innerHTML = '<div class="empty-msg">まだグッズが登録されていません。<br>「＋ 登録」タブから追加してください。</div>';
+    updateSummary();
+    return;
+  }
+
+  var html = '';
+  goods.forEach(function(g, i) {
+    var imgHtml = g.img
+      ? '<img class="card-img" src="' + esc(g.img) + '" alt="">'
+      : '<div class="card-img-empty">画像<br>なし</div>';
+
+    var over = g.checked && (g.transferQty || 0) > (g.qty || 0);
+
+    html += '<div class="goods-card' + (g.checked ? ' checked' : '') + '" id="card-' + g.id + '">';
+
+    // 上部：チェック＋画像＋情報
+    html += '<div class="card-top">';
+    html += '<div class="check-area">';
+    html += '<input type="checkbox" ' + (g.checked ? 'checked' : '') + ' onchange="toggleCheck(' + i + ',this.checked)">';
+    html += '</div>';
+    html += imgHtml;
+    html += '<div class="card-meta">';
+    html += '<div class="card-name">' + esc(g.name) + '</div>';
+    if (g.desc) html += '<div class="card-desc">' + esc(g.desc) + '</div>';
+    html += '<div class="card-price">¥' + g.price.toLocaleString() + '</div>';
+    html += '</div></div>';
+
+    // 在庫フィールド
+    html += '<div class="field-row">';
+    html += '<span class="field-label">在庫数</span>';
+    html += '<div class="field-input"><input type="number" value="' + (g.qty || 0) + '" min="0" inputmode="numeric" onchange="updateQty(' + i + ',this.value)"></div>';
+    html += '</div>';
+
+    // メモフィールド
+    html += '<div class="field-row" style="align-items:flex-start">';
+    html += '<span class="field-label" style="margin-top:8px">メモ</span>';
+    html += '<div class="field-input"><textarea onchange="updateMemo(' + i + ',this.value)" placeholder="譲渡先など">' + esc(g.memo || '') + '</textarea></div>';
+    html += '</div>';
+
+    // チェック時の譲渡セクション
+    if (g.checked) {
+      html += '<div class="transfer-section">';
+      html += '<div class="transfer-title">譲渡数量（合計計算用）</div>';
+      html += '<div class="transfer-row">';
+      html += '<input class="transfer-qty-input' + (over ? ' over' : '') + '" type="number" value="' + (g.transferQty || 1) + '" min="0" inputmode="numeric" onchange="updateTransfer(' + i + ',this.value)">';
+      html += '<span class="transfer-stock-info">個　（在庫：' + (g.qty || 0) + '個）</span>';
+      html += '</div>';
+      if (over) html += '<div class="over-msg">⚠ 在庫数を超えています</div>';
+      html += '</div>';
+    }
+
+    html += '<button class="delete-btn" onclick="deleteGoods(' + i + ')">削除する</button>';
+    html += '</div>';
+  });
+
+  el.innerHTML = html;
+  updateSummary();
+}
+
+function toggleCheck(i, v) {
+  goods[i].checked = v;
+  if (!v) goods[i].transferQty = 1;
+  saveGoods();
+  renderList();
+}
+
+function updateQty(i, v) {
+  goods[i].qty = parseInt(v) || 0;
+  saveGoods();
+  updateSummary();
+}
+
+function updateMemo(i, v) {
+  goods[i].memo = v;
+  saveGoods();
+}
+
+function updateTransfer(i, v) {
+  goods[i].transferQty = parseInt(v) || 0;
+  saveGoods();
+  renderList();
+}
+
+function deleteGoods(i) {
+  if (!confirm('「' + goods[i].name + '」を削除しますか？')) return;
+  goods.splice(i, 1);
+  saveGoods();
+  renderList();
+}
+
+function updateSummary() {
+  var checked = goods.filter(function(g) { return g.checked; });
+  if (!checked.length) {
+    document.getElementById('summary-amount').textContent = '¥0';
+    document.getElementById('summary-items').textContent = 'グッズにチェックを入れると表示されます';
+    return;
+  }
+  var total = checked.reduce(function(s, g) { return s + g.price * (g.transferQty || 1); }, 0);
+  document.getElementById('summary-amount').textContent = '¥' + total.toLocaleString();
+  document.getElementById('summary-items').innerHTML = checked.map(function(g) {
+    return esc(g.name) + ' × ' + (g.transferQty || 1) + '個 ＝ ¥' + (g.price * (g.transferQty || 1)).toLocaleString();
+  }).join('<br>');
+}
+
+loadGoods();
+renderList();
+
+function renderShare() {
+  var checked = goods.filter(function(g) { return g.checked; });
+  var wrap = document.getElementById('share-grid-wrap');
+  if (!checked.length) {
+    wrap.innerHTML = '<div class="share-empty">一覧タブでチェックを入れた<br>グッズがここに表示されます</div>';
+    document.getElementById('share-copy-text').value = '';
+    return;
+  }
+  var html = '<div class="share-grid">';
+  checked.forEach(function(g) {
+    var qty = g.transferQty || 1;
+    var dots = '';
+    for (var i = 0; i < qty; i++) dots += '⚫';
+    var imgHtml = g.img
+      ? '<img class="share-img" src="' + esc(g.img) + '" alt="">'
+      : '<div class="share-img-empty">画像なし</div>';
+    html += '<div class="share-item">' + imgHtml + '<div class="share-qty">個数×' + qty + '</div></div>';
+  });
+  html += '</div>';
+  wrap.innerHTML = html;
+
+  var names = checked.map(function(g) { return g.name; });
+  var unique = names.filter(function(n, i) { return names.indexOf(n) === i; });
+  document.getElementById('share-copy-text').value = unique.join('、');
+}
+
+function copyText() {
+  var ta = document.getElementById('share-copy-text');
+  if (!ta.value) { alert('コピーするテキストがありません'); return; }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(ta.value).then(function() {
+      alert('コピーしました！');
+    }).catch(function() {
+      ta.select(); document.execCommand('copy'); alert('コピーしました！');
+    });
+  } else {
+    ta.select(); document.execCommand('copy'); alert('コピーしました！');
+  }
+}
+</script>
+</body>
+</html>
