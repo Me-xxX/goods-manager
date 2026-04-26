@@ -45,17 +45,20 @@ body{font-family:-apple-system,'Hiragino Sans','Hiragino Kaku Gothic ProN',sans-
 .genre-chip.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 
 /* グリッドビュー */
-.goods-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-.grid-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:8px;display:flex;flex-direction:column;gap:4px;transition:border-color .15s}
+.goods-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.grid-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:6px;display:flex;flex-direction:column;gap:3px;transition:border-color .15s}
 .grid-card.checked{border-color:var(--accent)}
-.grid-card-top{display:flex;align-items:center;gap:6px}
-.grid-card-top input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);flex-shrink:0}
+.grid-card-top{display:flex;align-items:center;gap:4px}
+.grid-card-top input[type=checkbox]{width:14px;height:14px;accent-color:var(--accent);flex-shrink:0}
 .grid-img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:var(--rs);border:1px solid var(--border);display:block;cursor:pointer}
-.grid-img-empty{width:100%;aspect-ratio:1/1;border-radius:var(--rs);background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text3);cursor:pointer}
-.grid-name{font-size:12px;font-weight:600;line-height:1.3}
-.grid-genre{font-size:10px;color:var(--text3)}
-.grid-price{font-size:12px;font-weight:600}
-.grid-stock{font-size:11px;color:var(--text2)}
+.grid-img-empty{width:100%;aspect-ratio:1/1;border-radius:var(--rs);background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:8px;color:var(--text3);cursor:pointer}
+.grid-name{font-size:10px;font-weight:600;line-height:1.3}
+.grid-genre{font-size:9px;color:var(--text3)}
+.grid-price{font-size:10px;font-weight:600}
+.grid-qty-row{display:flex;align-items:center;gap:2px;margin-top:2px}
+.grid-qty-btn{width:22px;height:22px;border:1px solid var(--border2);border-radius:4px;background:var(--surface2);font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--text);-webkit-tap-highlight-color:transparent;padding:0;font-family:inherit}
+.grid-qty-btn:active{background:var(--border)}
+.grid-qty-num{flex:1;text-align:center;font-size:11px;color:var(--text2)}
 
 /* リストビュー */
 .goods-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px;margin-bottom:10px;transition:border-color .15s}
@@ -515,12 +518,16 @@ function renderGridView(el, list) {
       : '<div class="grid-img-empty" onclick="replaceImg('+i+')">画像なし</div>';
     html += '<div class="grid-card'+(g.checked?' checked':'')+'">'+
       '<div class="grid-card-top"><input type="checkbox"'+(g.checked?' checked':'')+' onchange="toggleCheck('+i+',this.checked)">'+
-      (g.fav?'<span class="heart-badge" style="font-size:12px">&#x2665;</span>':'')+
+      (g.fav?'<span class="heart-badge" style="font-size:11px">&#x2665;</span>':'')+
       '</div>'+imgHtml+
       '<div class="grid-name">'+esc(g.name)+'</div>'+
       '<div class="grid-genre">'+esc(g.genre||'その他')+'</div>'+
       '<div class="grid-price">&#xa5;'+g.price.toLocaleString()+'</div>'+
-      '<div class="grid-stock">在庫：'+(g.qty||0)+'個</div>'+
+      '<div class="grid-qty-row">'+
+        '<button class="grid-qty-btn" onclick="changeQty('+i+',-1)">&#8722;</button>'+
+        '<span class="grid-qty-num">'+(g.qty||0)+'個</span>'+
+        '<button class="grid-qty-btn" onclick="changeQty('+i+',1)">&#43;</button>'+
+      '</div>'+
       '</div>';
   });
   html += '</div>';
