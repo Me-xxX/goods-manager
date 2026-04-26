@@ -351,36 +351,82 @@ var replaceIdx = null;
 var circleNums = ['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩'];
 function circleNum(n) { return circleNums[n] || ('(' + (n+1) + ')'); }
 
-function loadGoods() {
-  try { goods = JSON.parse(localStorage.getItem('goods_mgr_v2') || '[]'); } catch(e) { goods = []; }
-  goods.forEach(function(g) {
+// ─── IndexedDB ───────────────────────────────────────────
+var DB_NAME = 'goods_app', DB_VER = 1, STORE = 'goods';
+var db = null;
+
+function openDB(callback) {
+  if (db) { callback(); return; }
+  var req = indexedDB.open(DB_NAME, DB_VER);
+  req.onupgradeneeded = function(e) {
+    e.target.result.createObjectStore(STORE, { keyPath: 'id' });
+  };
+  req.onsuccess = function(e) { db = e.target.result; callback(); };
+  req.onerror = function() { alert('DBを開けませんでした'); };
+}
+
+function normalizeGoods(list) {
+  list.forEach(function(g) {
     if (!g.fav) g.fav = false;
     if (!g.hidden) g.hidden = false;
     if (g.memoOpen === undefined) g.memoOpen = !!(g.memo);
     if (g.transferOpen === undefined) g.transferOpen = false;
     if (g.qty === undefined) g.qty = g.stock || 0;
     if (!g.genre) g.genre = 'その他';
-    // 旧形式の譲渡先を新形式（配列）に変換
     if (!g.transfers) {
       g.transfers = [];
       if (g.transferName || g.transferUrl) {
-        g.transfers.push({ date: '', time: '', tqty: 1, ttype: '対面取引', name: g.transferName || '', url: g.transferUrl || '', tmemo: '' });
+        g.transfers.push({ date:'', time:'', tqty:1, ttype:'対面取引', name:g.transferName||'', url:g.transferUrl||'', tmemo:'' });
       }
       delete g.transferName; delete g.transferUrl;
     }
-    // 既存transfersの不足フィールドを補完
     g.transfers.forEach(function(t) {
       if (!t.time) t.time = '';
-      if (!t.tqty) t.tqty = 1;
+      if (t.tqty === undefined) t.tqty = 1;
       if (!t.ttype) t.ttype = '対面取引';
       if (!t.tmemo) t.tmemo = '';
     });
   });
+  return list;
+}
+
+function loadGoods() { /* 非同期のため initApp() で処理 */ }
+
+function loadFromDB(callback) {
+  openDB(function() {
+    var tx = db.transaction(STORE, 'readonly');
+    var req = tx.objectStore(STORE).getAll();
+    req.onsuccess = function(e) {
+      goods = normalizeGoods(e.target.result || []);
+      goods.sort(function(a,b){ return a.id - b.id; });
+      callback();
+    };
+    req.onerror = function() { goods = []; callback(); };
+  });
 }
 
 function saveGoods() {
-  try { localStorage.setItem('goods_mgr_v2', JSON.stringify(goods)); }
-  catch(e) { alert('保存容量が不足しています。不要なグッズを削除するか、画像サイズを小さくしてください。'); }
+  openDB(function() {
+    var tx = db.transaction(STORE, 'readwrite');
+    var store = tx.objectStore(STORE);
+    goods.forEach(function(g) { store.put(g); });
+  });
+}
+
+function deleteGoodsFromDB(id, callback) {
+  openDB(function() {
+    var tx = db.transaction(STORE, 'readwrite');
+    tx.objectStore(STORE).delete(id);
+    tx.oncomplete = callback || function(){};
+  });
+}
+
+function clearDB(callback) {
+  openDB(function() {
+    var tx = db.transaction(STORE, 'readwrite');
+    tx.objectStore(STORE).clear();
+    tx.oncomplete = callback || function(){};
+  });
 }
 
 function switchTab(t) {
@@ -681,7 +727,8 @@ function hideGoods(i) {
 
 function deleteAll() {
   if (!confirm('本当に全データを削除しますか？\nこの操作は元に戻せません。')) return;
-  goods = []; saveGoods(); renderList();
+  goods = [];
+  clearDB(function() { renderList(); });
 }
 
 function openEdit(i) {
@@ -739,7 +786,9 @@ function updateTransfer(i, v) {
 
 function deleteGoods(i) {
   if (!confirm('「'+goods[i].name+'」を削除しますか？')) return;
-  goods.splice(i, 1); saveGoods(); renderList();
+  var id = goods[i].id;
+  goods.splice(i, 1);
+  deleteGoodsFromDB(id, function() { renderList(); });
 }
 
 function updateSummary() {
@@ -784,13 +833,52 @@ function copyText() {
   } else { ta.select(); document.execCommand('copy'); alert('コピーしました！'); }
 }
 
-(function migrate() {
-  var old = localStorage.getItem('goods_mgr_v1');
-  if (old && !localStorage.getItem('goods_mgr_v2')) { localStorage.setItem('goods_mgr_v2', old); }
-})();
+// ─── 起動処理（localStorage→IndexedDB 移行付き） ──────────
+function initApp() {
+  openDB(function() {
+    // まずIndexedDBにデータがあるか確認
+    var tx = db.transaction(STORE, 'readonly');
+    var req = tx.objectStore(STORE).count();
+    req.onsuccess = function(e) {
+      var count = e.target.result;
+      if (count > 0) {
+        // IndexedDBにデータあり → そのまま読み込む
+        loadFromDB(function() { renderList(); });
+      } else {
+        // IndexedDBが空 → localStorageに旧データがあれば移行
+        var oldData = null;
+        try {
+          oldData = JSON.parse(localStorage.getItem('goods_mgr_v2') || localStorage.getItem('goods_mgr_v1') || 'null');
+        } catch(e) {}
 
-loadGoods();
-renderList();
+        if (oldData && oldData.length > 0) {
+          // 移行確認
+          if (confirm('以前のデータ（' + oldData.length + '件）を新しい保存方式に移行しますか？\n「OK」を押すと移行が始まります。')) {
+            goods = normalizeGoods(oldData);
+            goods.sort(function(a,b){ return a.id - b.id; });
+            var migTx = db.transaction(STORE, 'readwrite');
+            var store = migTx.objectStore(STORE);
+            goods.forEach(function(g) { store.put(g); });
+            migTx.oncomplete = function() {
+              // 移行完了後にlocalStorageを削除
+              try { localStorage.removeItem('goods_mgr_v2'); localStorage.removeItem('goods_mgr_v1'); } catch(e) {}
+              alert('移行が完了しました！');
+              renderList();
+            };
+          } else {
+            loadFromDB(function() { renderList(); });
+          }
+        } else {
+          // 旧データなし → 新規起動
+          goods = [];
+          renderList();
+        }
+      }
+    };
+  });
+}
+
+initApp();
 </script>
 </body>
 </html>
