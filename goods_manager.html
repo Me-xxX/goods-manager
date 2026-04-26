@@ -5,502 +5,172 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="icon.png">
 <title>グッズ管理</title>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#faf9f7;--surface:#fff;--surface2:#f3f2ef;
+  --border:#e0ddd8;--border2:#ccc9c3;
+  --text:#1a1917;--text2:#6b6861;--text3:#a09d97;
+  --accent:#2d2d2d;
+  --danger:#c0392b;--danger-bg:#fdf0ef;--danger-border:#f5c6c3;
+  --heart:#e74c3c;
+  --r:10px;--rs:6px;
+}
+body{font-family:-apple-system,'Hiragino Sans','Hiragino Kaku Gothic ProN',sans-serif;font-size:14px;background:var(--bg);color:var(--text);min-height:100vh;-webkit-text-size-adjust:100%}
 
-  :root {
-    --bg: #faf9f7;
-    --surface: #ffffff;
-    --surface2: #f3f2ef;
-    --border: #e0ddd8;
-    --border2: #ccc9c3;
-    --text: #1a1917;
-    --text2: #6b6861;
-    --text3: #a09d97;
-    --accent: #2d2d2d;
-    --danger: #c0392b;
-    --danger-bg: #fdf0ef;
-    --danger-border: #f5c6c3;
-    --radius: 10px;
-    --radius-sm: 6px;
-  }
+.app-header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 16px 0;position:sticky;top:0;z-index:100}
+.app-title{font-size:17px;font-weight:600;letter-spacing:-.3px;margin-bottom:12px}
+.tabs{display:flex}
+.tab{flex:1;text-align:center;padding:9px 0 10px;font-size:11px;font-weight:500;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none}
+.tab.active{color:var(--text);border-bottom-color:var(--accent)}
+.panel{display:none;padding:16px}
+.panel.active{display:block}
+#panel-share{padding:12px 12px 0}
 
-  body {
-    font-family: -apple-system, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', sans-serif;
-    font-size: 14px;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    -webkit-text-size-adjust: 100%;
-  }
+.summary-bar{background:var(--accent);color:#fff;border-radius:var(--r);padding:14px 16px;margin-bottom:12px}
+.summary-label{font-size:11px;opacity:.7;margin-bottom:4px}
+.summary-amount{font-size:26px;font-weight:600;letter-spacing:-.5px}
+.summary-items{font-size:11px;opacity:.75;margin-top:6px;line-height:1.7}
 
-  /* ヘッダー */
-  .app-header {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 14px 16px 0;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-  .app-title {
-    font-size: 17px;
-    font-weight: 600;
-    letter-spacing: -0.3px;
-    margin-bottom: 12px;
-    color: var(--text);
-  }
+.filter-bar{display:flex;gap:6px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+.filter-select{flex:1;min-width:80px;border:1px solid var(--border);border-radius:var(--rs);padding:6px 8px;font-size:12px;font-family:inherit;color:var(--text);background:var(--surface);outline:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;padding-right:22px}
+.filter-btn{font-size:11px;color:var(--text2);background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:6px 8px;cursor:pointer;font-family:inherit;white-space:nowrap;-webkit-tap-highlight-color:transparent}
+.filter-btn.active{background:var(--heart);color:#fff;border-color:var(--heart)}
+.view-toggle-btn{font-size:11px;color:var(--text2);background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:6px 8px;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;white-space:nowrap}
+.view-toggle-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.genre-filter-wrap{width:100%;display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.genre-chip{font-size:11px;padding:4px 8px;border:1px solid var(--border);border-radius:20px;cursor:pointer;background:var(--surface);color:var(--text2);-webkit-tap-highlight-color:transparent;white-space:nowrap}
+.genre-chip.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 
-  /* タブ */
-  .tabs {
-    display: flex;
-    gap: 0;
-  }
-  .tab {
-    flex: 1;
-    text-align: center;
-    padding: 9px 0 10px;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text3);
-    border-bottom: 2px solid transparent;
-    cursor: pointer;
-    transition: color 0.15s;
-    -webkit-tap-highlight-color: transparent;
-    user-select: none;
-  }
-  .tab.active {
-    color: var(--text);
-    border-bottom-color: var(--accent);
-  }
+/* グリッドビュー */
+.goods-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.grid-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:8px;display:flex;flex-direction:column;gap:4px;transition:border-color .15s}
+.grid-card.checked{border-color:var(--accent)}
+.grid-card-top{display:flex;align-items:center;gap:6px}
+.grid-card-top input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);flex-shrink:0}
+.grid-img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:var(--rs);border:1px solid var(--border);display:block;cursor:pointer}
+.grid-img-empty{width:100%;aspect-ratio:1/1;border-radius:var(--rs);background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text3);cursor:pointer}
+.grid-name{font-size:12px;font-weight:600;line-height:1.3}
+.grid-genre{font-size:10px;color:var(--text3)}
+.grid-price{font-size:12px;font-weight:600}
+.grid-stock{font-size:11px;color:var(--text2)}
 
-  /* パネル */
-  .panel { display: none; padding: 16px; }
-  .panel.active { display: block; }
+/* リストビュー */
+.goods-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px;margin-bottom:10px;transition:border-color .15s}
+.goods-card.checked{border-color:var(--accent)}
+.card-top{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px}
+.check-area{display:flex;align-items:center;flex-shrink:0;padding-top:2px}
+.check-area input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent);cursor:pointer}
+.card-img{width:60px;height:60px;object-fit:cover;border-radius:var(--rs);border:1px solid var(--border);flex-shrink:0;cursor:pointer}
+.card-img-empty{width:60px;height:60px;border-radius:var(--rs);background:var(--surface2);border:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text3);text-align:center;line-height:1.4;cursor:pointer}
+.card-meta{flex:1;min-width:0}
+.card-name{font-weight:600;font-size:14px;margin-bottom:2px;line-height:1.3;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.heart-badge{color:var(--heart);font-size:14px;line-height:1}
+.genre-badge{font-size:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1px 6px;color:var(--text2);font-weight:400}
+.card-desc{font-size:12px;color:var(--text2);margin-bottom:4px}
+.card-price{font-size:15px;font-weight:600}
 
-  /* サマリーバー */
-  .summary-bar {
-    background: var(--accent);
-    color: #fff;
-    border-radius: var(--radius);
-    padding: 14px 16px;
-    margin-bottom: 14px;
-  }
-  .summary-label {
-    font-size: 11px;
-    opacity: 0.7;
-    margin-bottom: 4px;
-    letter-spacing: 0.3px;
-  }
-  .summary-amount {
-    font-size: 26px;
-    font-weight: 600;
-    letter-spacing: -0.5px;
-  }
-  .summary-items {
-    font-size: 11px;
-    opacity: 0.75;
-    margin-top: 6px;
-    line-height: 1.7;
-  }
+.qty-row{display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.qty-label{font-size:11px;color:var(--text2);min-width:44px;flex-shrink:0}
+.qty-btn{width:30px;height:30px;border:1px solid var(--border2);border-radius:var(--rs);background:var(--surface2);font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--text);-webkit-tap-highlight-color:transparent;font-family:inherit;padding:0}
+.qty-btn:active{background:var(--border)}
+.qty-input{width:56px;border:1px solid var(--border);border-radius:var(--rs);padding:5px 6px;font-size:13px;font-family:inherit;color:var(--text);background:var(--surface);outline:none;text-align:center;-webkit-appearance:none}
+.qty-input:focus{border-color:var(--accent)}
 
-  /* グッズカード */
-  .goods-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 12px;
-    margin-bottom: 10px;
-    transition: border-color 0.15s;
-  }
-  .goods-card.checked {
-    border-color: var(--accent);
-  }
+.toggle-btn{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);background:none;border:none;cursor:pointer;padding:4px 0;margin-bottom:4px;font-family:inherit;-webkit-tap-highlight-color:transparent;width:100%}
+.collapsible.closed{display:none}
+.memo-textarea{width:100%;border:1px solid var(--border);border-radius:var(--rs);padding:7px 10px;font-size:13px;font-family:inherit;color:var(--text);background:var(--surface);outline:none;resize:none;min-height:48px;line-height:1.5;-webkit-appearance:none;margin-bottom:6px}
+.memo-textarea:focus{border-color:var(--accent)}
 
-  .card-top {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    margin-bottom: 10px;
-  }
-  .check-area {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
-  }
-  .check-area input[type=checkbox] {
-    width: 18px;
-    height: 18px;
-    accent-color: var(--accent);
-    cursor: pointer;
-    flex-shrink: 0;
-  }
-  .card-img {
-    width: 60px;
-    height: 60px;
-    object-fit: cover;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border);
-    flex-shrink: 0;
-  }
-  .card-img-empty {
-    width: 60px;
-    height: 60px;
-    border-radius: var(--radius-sm);
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 10px;
-    color: var(--text3);
-    text-align: center;
-    line-height: 1.4;
-  }
-  .card-meta {
-    flex: 1;
-    min-width: 0;
-  }
-  .card-name {
-    font-weight: 600;
-    font-size: 14px;
-    margin-bottom: 2px;
-    line-height: 1.3;
-  }
-  .card-desc {
-    font-size: 12px;
-    color: var(--text2);
-    margin-bottom: 4px;
-  }
-  .card-price {
-    font-size: 15px;
-    font-weight: 600;
-    letter-spacing: -0.3px;
-  }
+/* 譲渡先詳細（複数対応） */
+.transfer-block{background:var(--surface2);border-radius:var(--rs);padding:10px;margin-bottom:8px}
+.transfer-block-header{font-size:11px;font-weight:600;color:var(--text2);margin-bottom:8px}
+.transfer-field-row{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.transfer-field-label{font-size:11px;color:var(--text2);min-width:36px;flex-shrink:0}
+.transfer-date-input{flex:1;min-width:0;border:1px solid var(--border);border-radius:var(--rs);padding:6px 8px;font-size:12px;font-family:inherit;color:var(--text);background:var(--surface);outline:none;-webkit-appearance:none}
+.transfer-time-input{width:76px;flex-shrink:0;border:1px solid var(--border);border-radius:var(--rs);padding:6px 6px;font-size:12px;font-family:inherit;color:var(--text);background:var(--surface);outline:none;-webkit-appearance:none}
+.transfer-qty-sel{width:64px;flex-shrink:0;border:1px solid var(--border);border-radius:var(--rs);padding:6px 4px;font-size:12px;font-family:inherit;color:var(--text);background:var(--surface);outline:none;-webkit-appearance:none;text-align:center}
+.transfer-name-input{flex:1;min-width:0;border:1px solid var(--border);border-radius:var(--rs);padding:6px 8px;font-size:12px;font-family:inherit;color:var(--text);background:var(--surface);outline:none;-webkit-appearance:none}
+.transfer-url-input{flex:2;min-width:0;border:1px solid var(--border);border-radius:var(--rs);padding:6px 8px;font-size:12px;font-family:inherit;color:var(--text);background:var(--surface);outline:none;-webkit-appearance:none}
+.transfer-date-input:focus,.transfer-time-input:focus,.transfer-qty-sel:focus,.transfer-name-input:focus,.transfer-url-input:focus{border-color:var(--accent)}
+.transfer-type-row{display:flex;gap:10px;margin-bottom:6px;flex-wrap:wrap}
+.transfer-type-label{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text);cursor:pointer}
+.transfer-type-label input[type=radio]{width:14px;height:14px;accent-color:var(--accent);cursor:pointer}
+.transfer-memo-input{width:100%;border:1px solid var(--border);border-radius:var(--rs);padding:6px 8px;font-size:12px;font-family:inherit;color:var(--text);background:var(--surface);outline:none;resize:none;min-height:40px;line-height:1.5;-webkit-appearance:none;margin-top:2px}
+.transfer-memo-input:focus{border-color:var(--accent)}
+.url-open-btn{font-size:16px;text-decoration:none;flex-shrink:0;padding:2px}
+.transfer-remove-btn{font-size:11px;color:var(--danger);background:none;border:none;cursor:pointer;font-family:inherit;padding:2px 0;-webkit-tap-highlight-color:transparent}
+.add-transfer-btn{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--accent);background:none;border:1px dashed var(--border2);border-radius:var(--rs);padding:6px 10px;cursor:pointer;font-family:inherit;width:100%;justify-content:center;margin-top:4px;-webkit-tap-highlight-color:transparent}
 
-  /* フィールド行 */
-  .field-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 8px;
-  }
-  .field-label {
-    font-size: 11px;
-    color: var(--text2);
-    min-width: 44px;
-    flex-shrink: 0;
-  }
-  .field-input {
-    flex: 1;
-  }
-  .field-input input[type=number],
-  .field-input textarea {
-    width: 100%;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 7px 10px;
-    font-size: 13px;
-    font-family: inherit;
-    color: var(--text);
-    background: var(--surface);
-    outline: none;
-    -webkit-appearance: none;
-    appearance: none;
-  }
-  .field-input input[type=number]:focus,
-  .field-input textarea:focus {
-    border-color: var(--accent);
-  }
-  .field-input textarea {
-    resize: none;
-    min-height: 44px;
-    line-height: 1.5;
-  }
+.transfer-section{background:var(--surface2);border-radius:var(--rs);padding:10px 12px;margin-top:8px;margin-bottom:8px}
+.transfer-title{font-size:11px;font-weight:600;color:var(--text2);margin-bottom:8px}
+.transfer-row{display:flex;align-items:center;gap:8px}
+.transfer-qty-input{width:72px;border:1px solid var(--border2);border-radius:var(--rs);padding:6px 8px;font-size:14px;font-family:inherit;color:var(--text);background:var(--surface);outline:none;-webkit-appearance:none;text-align:center}
+.transfer-qty-input.over{border-color:var(--danger);color:var(--danger);background:var(--danger-bg)}
+.transfer-stock-info{font-size:12px;color:var(--text2)}
+.over-msg{font-size:11px;color:var(--danger);margin-top:4px;font-weight:500}
 
-  /* 譲渡セクション */
-  .transfer-section {
-    background: var(--surface2);
-    border-radius: var(--radius-sm);
-    padding: 10px 12px;
-    margin-top: 8px;
-    margin-bottom: 8px;
-  }
-  .transfer-title {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--text2);
-    margin-bottom: 8px;
-    letter-spacing: 0.3px;
-  }
-  .transfer-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .transfer-qty-input {
-    width: 72px;
-    border: 1px solid var(--border2);
-    border-radius: var(--radius-sm);
-    padding: 6px 8px;
-    font-size: 14px;
-    font-family: inherit;
-    color: var(--text);
-    background: var(--surface);
-    outline: none;
-    -webkit-appearance: none;
-    appearance: none;
-    text-align: center;
-  }
-  .transfer-qty-input:focus {
-    border-color: var(--accent);
-  }
-  .transfer-qty-input.over {
-    border-color: var(--danger);
-    color: var(--danger);
-    background: var(--danger-bg);
-  }
-  .transfer-stock-info {
-    font-size: 12px;
-    color: var(--text2);
-  }
-  .over-msg {
-    font-size: 11px;
-    color: var(--danger);
-    margin-top: 4px;
-    font-weight: 500;
-  }
+.card-actions{display:flex;gap:6px;margin-top:8px}
+.edit-btn{flex:1;padding:7px;font-size:12px;font-family:inherit;color:var(--text2);background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);cursor:pointer;text-align:center;-webkit-tap-highlight-color:transparent}
+.hide-btn{flex:1;padding:7px;font-size:12px;font-family:inherit;color:var(--text2);background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);cursor:pointer;text-align:center;-webkit-tap-highlight-color:transparent}
+.delete-btn{flex:1;padding:7px;font-size:12px;font-family:inherit;color:var(--danger);background:var(--danger-bg);border:1px solid var(--danger-border);border-radius:var(--rs);cursor:pointer;text-align:center;-webkit-tap-highlight-color:transparent}
 
-  /* 削除ボタン */
-  .delete-btn {
-    display: block;
-    width: 100%;
-    margin-top: 8px;
-    padding: 7px;
-    font-size: 12px;
-    font-family: inherit;
-    color: var(--danger);
-    background: var(--danger-bg);
-    border: 1px solid var(--danger-border);
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    text-align: center;
-    -webkit-tap-highlight-color: transparent;
-  }
+.hidden-section{margin-top:16px;border-top:1px dashed var(--border);padding-top:12px}
+.hidden-section-title{font-size:12px;color:var(--text3);margin-bottom:8px;font-weight:500}
+.hidden-restore-row{display:flex;gap:8px;align-items:center}
+.hidden-select{flex:1;border:1px solid var(--border);border-radius:var(--rs);padding:8px 10px;font-size:13px;font-family:inherit;color:var(--text);background:var(--surface);outline:none;-webkit-appearance:none}
+.restore-btn{padding:8px 14px;font-size:12px;font-family:inherit;background:var(--accent);color:#fff;border:none;border-radius:var(--rs);cursor:pointer;white-space:nowrap}
 
-  /* 空メッセージ */
-  .empty-msg {
-    text-align: center;
-    padding: 48px 24px;
-    color: var(--text3);
-    font-size: 13px;
-    line-height: 1.8;
-  }
+.danger-zone{margin-top:24px;padding-top:16px;border-top:1px dashed var(--danger-border)}
+.danger-zone-btn{width:100%;padding:12px;font-size:13px;font-family:inherit;color:var(--danger);background:var(--danger-bg);border:1px solid var(--danger-border);border-radius:var(--rs);cursor:pointer;text-align:center;font-weight:600}
+.empty-msg{text-align:center;padding:48px 24px;color:var(--text3);font-size:13px;line-height:1.8}
 
-  /* 登録フォーム */
-  .form-section {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 16px;
-    margin-bottom: 12px;
-  }
-  .form-section-title {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text2);
-    letter-spacing: 0.5px;
-    margin-bottom: 12px;
-  }
-  .form-field {
-    margin-bottom: 12px;
-  }
-  .form-label {
-    display: block;
-    font-size: 12px;
-    color: var(--text2);
-    margin-bottom: 5px;
-    font-weight: 500;
-  }
-  .form-input {
-    width: 100%;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 10px 12px;
-    font-size: 14px;
-    font-family: inherit;
-    color: var(--text);
-    background: var(--surface);
-    outline: none;
-    -webkit-appearance: none;
-    appearance: none;
-  }
-  .form-input:focus {
-    border-color: var(--accent);
-  }
-  .form-input[type=number] {
-    -moz-appearance: textfield;
-  }
-  .img-upload-area {
-    width: 100%;
-    height: 130px;
-    border: 1.5px dashed var(--border2);
-    border-radius: var(--radius);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    color: var(--text3);
-    font-size: 13px;
-    gap: 6px;
-    background: var(--surface2);
-    -webkit-tap-highlight-color: transparent;
-    transition: border-color 0.15s;
-  }
-  .img-upload-area:active {
-    border-color: var(--accent);
-  }
-  .upload-icon {
-    font-size: 28px;
-    line-height: 1;
-  }
-  .preview-img {
-    width: 100%;
-    height: 130px;
-    object-fit: cover;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    display: none;
-    cursor: pointer;
-  }
-  .img-hint {
-    font-size: 11px;
-    color: var(--text3);
-    margin-top: 4px;
-  }
+/* 編集モーダル */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:flex-end;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal-box{background:var(--surface);border-radius:var(--r) var(--r) 0 0;padding:20px 16px;width:100%;max-height:85vh;overflow-y:auto}
+.modal-title{font-size:16px;font-weight:600;margin-bottom:16px}
+.modal-close{float:right;background:none;border:none;font-size:20px;cursor:pointer;color:var(--text2);line-height:1;padding:0}
+.modal-field{margin-bottom:12px}
+.modal-label{display:block;font-size:12px;color:var(--text2);margin-bottom:5px;font-weight:500}
+.modal-input{width:100%;border:1px solid var(--border);border-radius:var(--rs);padding:10px 12px;font-size:14px;font-family:inherit;color:var(--text);background:var(--surface);outline:none;-webkit-appearance:none}
+.modal-input:focus{border-color:var(--accent)}
+.modal-save-btn{width:100%;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:var(--rs);font-size:15px;font-family:inherit;font-weight:600;cursor:pointer;margin-top:8px}
 
-  .register-btn {
-    width: 100%;
-    padding: 14px;
-    background: var(--accent);
-    color: #fff;
-    border: none;
-    border-radius: var(--radius);
-    font-size: 15px;
-    font-family: inherit;
-    font-weight: 600;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    transition: opacity 0.15s;
-  }
-  .register-btn:active {
-    opacity: 0.8;
-  }
+/* 登録フォーム */
+.form-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:12px}
+.form-section-title{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:12px}
+.form-field{margin-bottom:12px}
+.form-label{display:block;font-size:12px;color:var(--text2);margin-bottom:5px;font-weight:500}
+.form-input{width:100%;border:1px solid var(--border);border-radius:var(--rs);padding:10px 12px;font-size:14px;font-family:inherit;color:var(--text);background:var(--surface);outline:none;-webkit-appearance:none}
+.form-input:focus{border-color:var(--accent)}
+.img-upload-area{width:100%;height:130px;border:1.5px dashed var(--border2);border-radius:var(--r);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;color:var(--text3);font-size:13px;gap:6px;background:var(--surface2);-webkit-tap-highlight-color:transparent}
+.upload-icon{font-size:28px}
+.preview-img{width:100%;height:130px;object-fit:cover;border-radius:var(--r);border:1px solid var(--border);display:none;cursor:pointer}
+.img-hint{font-size:11px;color:var(--text3);margin-top:4px}
+.fav-toggle{display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent}
+.fav-toggle input[type=checkbox]{width:18px;height:18px;accent-color:var(--heart);cursor:pointer}
+.fav-heart{color:var(--heart);font-size:16px}
+.genre-check-wrap{display:flex;flex-wrap:wrap;gap:8px}
+.genre-check-label{display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.genre-check-label input[type=radio]{width:16px;height:16px;accent-color:var(--accent);cursor:pointer}
+.register-btn{width:100%;padding:14px;background:var(--accent);color:#fff;border:none;border-radius:var(--r);font-size:15px;font-family:inherit;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.register-btn:active{opacity:.8}
 
-  /* 共有タブ */
-  #panel-share {
-    padding: 12px 12px 0;
-  }
-  .share-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 6px;
-    margin-bottom: 0;
-  }
-  .share-item {
-    display: flex;
-    flex-direction: column;
-  }
-  .share-img {
-    width: 100%;
-    aspect-ratio: 1 / 1;
-    object-fit: cover;
-    border-radius: 4px;
-    border: 1px solid var(--border);
-    display: block;
-  }
-  .share-img-empty {
-    width: 100%;
-    aspect-ratio: 1 / 1;
-    border-radius: 4px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 9px;
-    color: var(--text3);
-  }
-  .share-qty {
-    font-size: 11px;
-    font-weight: 600;
-    text-align: center;
-    margin-top: 3px;
-    padding: 3px 2px;
-    border: 1px solid var(--border);
-    border-radius: 3px;
-    background: var(--surface);
-    color: var(--text);
-    letter-spacing: 0.2px;
-  }
-  .share-spacer {
-    height: 80px;
-  }
-  .share-copy-section {
-    padding: 12px;
-    border-top: 1px solid var(--border);
-    background: var(--bg);
-  }
-  .share-copy-label {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--text2);
-    margin-bottom: 6px;
-    letter-spacing: 0.3px;
-  }
-  .share-copy-box {
-    width: 100%;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 10px 12px;
-    font-size: 13px;
-    font-family: inherit;
-    color: var(--text);
-    background: var(--surface);
-    resize: none;
-    min-height: 60px;
-    line-height: 1.6;
-    outline: none;
-  }
-  .share-copy-box:focus {
-    border-color: var(--accent);
-  }
-  .copy-btn {
-    width: 100%;
-    margin-top: 8px;
-    padding: 10px;
-    background: var(--accent);
-    color: #fff;
-    border: none;
-    border-radius: var(--radius-sm);
-    font-size: 13px;
-    font-family: inherit;
-    font-weight: 600;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .copy-btn:active { opacity: 0.8; }
-  .share-empty {
-    text-align: center;
-    padding: 48px 24px;
-    color: var(--text3);
-    font-size: 13px;
-    line-height: 1.8;
-  }
+/* 共有タブ */
+.share-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.share-item{display:flex;flex-direction:column}
+.share-img{width:100%;aspect-ratio:1/1;object-fit:contain;border-radius:4px;border:1px solid var(--border);display:block;background:var(--surface2)}
+.share-img-empty{width:100%;aspect-ratio:1/1;border-radius:4px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text3)}
+.share-qty{font-size:11px;font-weight:600;text-align:center;margin-top:3px;padding:3px 2px;border:1px solid var(--border);border-radius:3px;background:var(--surface)}
+.share-spacer{height:80px}
+.share-copy-section{padding:12px;border-top:1px solid var(--border);background:var(--bg)}
+.share-copy-label{font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px}
+.share-copy-box{width:100%;border:1px solid var(--border);border-radius:var(--rs);padding:10px 12px;font-size:13px;font-family:inherit;color:var(--text);background:var(--surface);resize:none;min-height:60px;line-height:1.6;outline:none}
+.copy-btn{width:100%;margin-top:8px;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:var(--rs);font-size:13px;font-family:inherit;font-weight:600;cursor:pointer}
+.share-empty{text-align:center;padding:48px 24px;color:var(--text3);font-size:13px;line-height:1.8}
 </style>
 </head>
 <body>
@@ -514,32 +184,63 @@
   </div>
 </div>
 
-<!-- 一覧タブ -->
 <div class="panel active" id="panel-list">
   <div class="summary-bar">
     <div class="summary-label">チェックしたグッズの合計金額</div>
     <div class="summary-amount" id="summary-amount">¥0</div>
     <div class="summary-items" id="summary-items">グッズにチェックを入れると表示されます</div>
   </div>
+  <div class="filter-bar">
+    <select class="filter-select" id="sort-select" onchange="renderList()">
+      <option value="default">登録順</option>
+      <option value="name">名前順</option>
+      <option value="price">価格順</option>
+      <option value="stock">在庫数順</option>
+    </select>
+    <select class="filter-select" id="stock-filter" onchange="renderList()">
+      <option value="all">在庫なし含む</option>
+      <option value="instock">在庫あり</option>
+    </select>
+    <button class="filter-btn" id="fav-filter-btn" onclick="toggleFavFilter()">&#x2665; お気に入り</button>
+    <button class="filter-btn" id="genre-filter-btn" onclick="toggleGenrePanel()">＋種別</button>
+    <button class="view-toggle-btn" id="view-toggle-btn" onclick="toggleView()">格子表示</button>
+  </div>
+  <div class="genre-filter-wrap" id="genre-filter-wrap" style="display:none">
+    <span class="genre-chip active" data-genre="all" onclick="selectGenre('all')">すべて</span>
+    <span class="genre-chip" data-genre="ブロマイド" onclick="selectGenre('ブロマイド')">ブロマイド</span>
+    <span class="genre-chip" data-genre="カード" onclick="selectGenre('カード')">カード</span>
+    <span class="genre-chip" data-genre="アクリルスタンド" onclick="selectGenre('アクリルスタンド')">アクスタ</span>
+    <span class="genre-chip" data-genre="その他紙類" onclick="selectGenre('その他紙類')">その他紙類</span>
+    <span class="genre-chip" data-genre="その他雑貨" onclick="selectGenre('その他雑貨')">その他雑貨</span>
+    <span class="genre-chip" data-genre="その他" onclick="selectGenre('その他')">その他</span>
+  </div>
   <div id="goods-list"></div>
+  <div class="hidden-section" id="hidden-section" style="display:none">
+    <div class="hidden-section-title">非表示のグッズ</div>
+    <div class="hidden-restore-row">
+      <select class="hidden-select" id="hidden-select"><option value="">選択してください</option></select>
+      <button class="restore-btn" onclick="restoreGoods()">再表示</button>
+    </div>
+  </div>
+  <div class="danger-zone">
+    <button class="danger-zone-btn" onclick="deleteAll()">&#9888; 全データを一括削除する</button>
+  </div>
+  <div style="height:24px"></div>
 </div>
 
-<!-- 登録タブ -->
 <div class="panel" id="panel-register">
-
   <div class="form-section">
     <div class="form-section-title">画像</div>
     <div class="form-field">
       <input type="file" id="img-input" accept="image/*" style="display:none" onchange="handleImage(this)">
       <div class="img-upload-area" id="img-placeholder" onclick="document.getElementById('img-input').click()">
-        <span class="upload-icon">🖼</span>
+        <span class="upload-icon">&#128444;</span>
         <span>タップして画像を選択</span>
       </div>
       <img class="preview-img" id="img-preview" onclick="document.getElementById('img-input').click()">
       <div class="img-hint">※ 高解像度の写真を大量登録すると容量が増えます</div>
     </div>
   </div>
-
   <div class="form-section">
     <div class="form-section-title">グッズ情報</div>
     <div class="form-field">
@@ -547,24 +248,40 @@
       <input type="text" class="form-input" id="reg-name" placeholder="例：田中花子">
     </div>
     <div class="form-field">
-      <label class="form-label">グッズ名・説明（任意）</label>
-      <input type="text" class="form-input" id="reg-desc" placeholder="例：アクリルスタンド">
+      <label class="form-label">メモ（任意）</label>
+      <input type="text" class="form-input" id="reg-desc" placeholder="例：1つは自分用">
     </div>
     <div class="form-field">
       <label class="form-label">金額（円）</label>
       <input type="number" class="form-input" id="reg-price" placeholder="0" min="0" inputmode="numeric">
     </div>
-    <div class="form-field" style="margin-bottom:0">
+    <div class="form-field">
       <label class="form-label">在庫数</label>
       <input type="number" class="form-input" id="reg-stock" value="1" min="0" inputmode="numeric">
     </div>
+    <div class="form-field">
+      <label class="form-label">種別</label>
+      <div class="genre-check-wrap">
+        <label class="genre-check-label"><input type="radio" name="reg-genre" value="ブロマイド"> ブロマイド</label>
+        <label class="genre-check-label"><input type="radio" name="reg-genre" value="カード"> カード</label>
+        <label class="genre-check-label"><input type="radio" name="reg-genre" value="アクリルスタンド"> アクスタ</label>
+        <label class="genre-check-label"><input type="radio" name="reg-genre" value="その他紙類"> その他紙類</label>
+        <label class="genre-check-label"><input type="radio" name="reg-genre" value="その他雑貨"> その他雑貨</label>
+        <label class="genre-check-label"><input type="radio" name="reg-genre" value="その他" checked> その他</label>
+      </div>
+    </div>
+    <div class="form-field" style="margin-bottom:0">
+      <label class="fav-toggle">
+        <input type="checkbox" id="reg-fav">
+        <span class="fav-heart">&#x2665;</span>
+        <span style="font-size:13px">お気に入りにする</span>
+      </label>
+    </div>
   </div>
-
   <button class="register-btn" onclick="registerGoods()">登録する</button>
   <div style="height:32px"></div>
 </div>
 
-<!-- 共有タブ -->
 <div class="panel" id="panel-share">
   <div id="share-grid-wrap"></div>
   <div class="share-spacer"></div>
@@ -575,31 +292,128 @@
   </div>
 </div>
 
+<!-- 編集モーダル -->
+<div class="modal-overlay" id="edit-modal" onclick="closeEditModal(event)">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal()">&#x2715;</button>
+    <div class="modal-title">グッズを編集</div>
+    <div class="modal-field">
+      <label class="modal-label">キャラクター名 *</label>
+      <input type="text" class="modal-input" id="edit-name">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">メモ</label>
+      <input type="text" class="modal-input" id="edit-desc" placeholder="例：1つは自分用">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">金額（円）</label>
+      <input type="number" class="modal-input" id="edit-price" inputmode="numeric">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">種別</label>
+      <div class="genre-check-wrap">
+        <label class="genre-check-label"><input type="radio" name="edit-genre" value="ブロマイド"> ブロマイド</label>
+        <label class="genre-check-label"><input type="radio" name="edit-genre" value="カード"> カード</label>
+        <label class="genre-check-label"><input type="radio" name="edit-genre" value="アクリルスタンド"> アクスタ</label>
+        <label class="genre-check-label"><input type="radio" name="edit-genre" value="その他紙類"> その他紙類</label>
+        <label class="genre-check-label"><input type="radio" name="edit-genre" value="その他雑貨"> その他雑貨</label>
+        <label class="genre-check-label"><input type="radio" name="edit-genre" value="その他"> その他</label>
+      </div>
+    </div>
+    <div class="modal-field" style="margin-bottom:0">
+      <label class="fav-toggle">
+        <input type="checkbox" id="edit-fav">
+        <span class="fav-heart">&#x2665;</span>
+        <span style="font-size:13px">お気に入り</span>
+      </label>
+    </div>
+    <button class="modal-save-btn" onclick="saveEdit()">保存する</button>
+    <div style="height:8px"></div>
+  </div>
+</div>
+
+<input type="file" id="img-replace-input" accept="image/*" style="display:none" onchange="handleImgReplace(this)">
+
 <script>
 var goods = [];
 var imgData = null;
+var favFilter = false;
+var genreFilter = 'all';
+var genrePanelOpen = false;
+var viewMode = 'list';
+var editIdx = null;
+var replaceIdx = null;
+
+// 丸数字
+var circleNums = ['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩'];
+function circleNum(n) { return circleNums[n] || ('(' + (n+1) + ')'); }
 
 function loadGoods() {
-  try { goods = JSON.parse(localStorage.getItem('goods_mgr_v1') || '[]'); } catch(e) { goods = []; }
+  try { goods = JSON.parse(localStorage.getItem('goods_mgr_v2') || '[]'); } catch(e) { goods = []; }
+  goods.forEach(function(g) {
+    if (!g.fav) g.fav = false;
+    if (!g.hidden) g.hidden = false;
+    if (g.memoOpen === undefined) g.memoOpen = !!(g.memo);
+    if (g.transferOpen === undefined) g.transferOpen = false;
+    if (g.qty === undefined) g.qty = g.stock || 0;
+    if (!g.genre) g.genre = 'その他';
+    // 旧形式の譲渡先を新形式（配列）に変換
+    if (!g.transfers) {
+      g.transfers = [];
+      if (g.transferName || g.transferUrl) {
+        g.transfers.push({ date: '', time: '', tqty: 1, ttype: '対面取引', name: g.transferName || '', url: g.transferUrl || '', tmemo: '' });
+      }
+      delete g.transferName; delete g.transferUrl;
+    }
+    // 既存transfersの不足フィールドを補完
+    g.transfers.forEach(function(t) {
+      if (!t.time) t.time = '';
+      if (!t.tqty) t.tqty = 1;
+      if (!t.ttype) t.ttype = '対面取引';
+      if (!t.tmemo) t.tmemo = '';
+    });
+  });
 }
 
 function saveGoods() {
-  try {
-    localStorage.setItem('goods_mgr_v1', JSON.stringify(goods));
-  } catch(e) {
-    alert('保存容量が不足しています。不要なグッズを削除するか、画像サイズを小さくしてください。');
-  }
+  try { localStorage.setItem('goods_mgr_v2', JSON.stringify(goods)); }
+  catch(e) { alert('保存容量が不足しています。不要なグッズを削除するか、画像サイズを小さくしてください。'); }
 }
 
 function switchTab(t) {
-  document.getElementById('tab-list').classList.toggle('active', t === 'list');
-  document.getElementById('tab-register').classList.toggle('active', t === 'register');
-  document.getElementById('tab-share').classList.toggle('active', t === 'share');
-  document.getElementById('panel-list').classList.toggle('active', t === 'list');
-  document.getElementById('panel-register').classList.toggle('active', t === 'register');
-  document.getElementById('panel-share').classList.toggle('active', t === 'share');
-  if (t === 'list') renderList();
-  if (t === 'share') renderShare();
+  ['list','register','share'].forEach(function(id) {
+    document.getElementById('tab-'+id).classList.toggle('active', t===id);
+    document.getElementById('panel-'+id).classList.toggle('active', t===id);
+  });
+  if (t==='list') renderList();
+  if (t==='share') renderShare();
+}
+
+function toggleFavFilter() {
+  favFilter = !favFilter;
+  document.getElementById('fav-filter-btn').classList.toggle('active', favFilter);
+  renderList();
+}
+
+function toggleGenrePanel() {
+  genrePanelOpen = !genrePanelOpen;
+  document.getElementById('genre-filter-btn').classList.toggle('active', genrePanelOpen);
+  document.getElementById('genre-filter-wrap').style.display = genrePanelOpen ? 'flex' : 'none';
+}
+
+function selectGenre(g) {
+  genreFilter = g;
+  document.querySelectorAll('.genre-chip').forEach(function(el) {
+    el.classList.toggle('active', el.dataset.genre === g);
+  });
+  renderList();
+}
+
+function toggleView() {
+  viewMode = viewMode === 'list' ? 'grid' : 'list';
+  document.getElementById('view-toggle-btn').textContent = viewMode === 'list' ? '格子表示' : 'リスト表示';
+  document.getElementById('view-toggle-btn').classList.toggle('active', viewMode === 'grid');
+  renderList();
 }
 
 function handleImage(input) {
@@ -608,142 +422,317 @@ function handleImage(input) {
   var reader = new FileReader();
   reader.onload = function(e) {
     imgData = e.target.result;
-    var preview = document.getElementById('img-preview');
-    preview.src = imgData;
-    preview.style.display = 'block';
+    document.getElementById('img-preview').src = imgData;
+    document.getElementById('img-preview').style.display = 'block';
     document.getElementById('img-placeholder').style.display = 'none';
   };
   reader.readAsDataURL(file);
 }
 
+function handleImgReplace(input) {
+  if (replaceIdx === null) return;
+  var file = input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    goods[replaceIdx].img = e.target.result;
+    saveGoods(); renderList();
+    input.value = ''; replaceIdx = null;
+  };
+  reader.readAsDataURL(file);
+}
+
+function replaceImg(i) { replaceIdx = i; document.getElementById('img-replace-input').click(); }
+
 function registerGoods() {
   var name = document.getElementById('reg-name').value.trim();
   var desc = document.getElementById('reg-desc').value.trim();
   var price = parseInt(document.getElementById('reg-price').value) || 0;
-  var stock = parseInt(document.getElementById('reg-stock').value) || 1;
+  var stockEl = document.getElementById('reg-stock');
+  var stock = stockEl.value === '' ? 1 : Math.max(0, parseInt(stockEl.value) || 0);
+  var fav = document.getElementById('reg-fav').checked;
+  var genreEl = document.querySelector('input[name="reg-genre"]:checked');
+  var genre = genreEl ? genreEl.value : 'その他';
   if (!name) { alert('キャラクター名を入力してください'); return; }
 
-  goods.push({
-    id: Date.now(),
-    name: name,
-    desc: desc,
-    price: price,
-    stock: stock,
-    qty: stock,
-    memo: '',
-    img: imgData || null,
-    checked: false,
-    transferQty: 1
-  });
+  goods.push({ id: Date.now(), name: name, desc: desc, price: price,
+    stock: stock, qty: stock, memo: '', img: imgData || null,
+    checked: false, transferQty: 1, fav: fav, hidden: false,
+    memoOpen: false, transferOpen: false, transfers: [], genre: genre });
   saveGoods();
 
   document.getElementById('reg-name').value = '';
   document.getElementById('reg-desc').value = '';
   document.getElementById('reg-price').value = '';
   document.getElementById('reg-stock').value = '1';
+  document.getElementById('reg-fav').checked = false;
+  var defGenre = document.querySelector('input[name="reg-genre"][value="その他"]');
+  if (defGenre) defGenre.checked = true;
   document.getElementById('img-preview').style.display = 'none';
   document.getElementById('img-placeholder').style.display = 'flex';
   document.getElementById('img-input').value = '';
   imgData = null;
-
   switchTab('list');
 }
 
-function esc(s) {
-  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function getFilteredGoods() {
+  var sortVal = document.getElementById('sort-select').value;
+  var stockVal = document.getElementById('stock-filter').value;
+  var list = goods.map(function(g, i) { return { g: g, i: i }; }).filter(function(item) {
+    var g = item.g;
+    if (g.hidden) return false;
+    if (favFilter && !g.fav) return false;
+    if (stockVal === 'instock' && (g.qty || 0) <= 0) return false;
+    if (genreFilter !== 'all' && g.genre !== genreFilter) return false;
+    return true;
+  });
+  if (sortVal === 'name') list.sort(function(a,b) { return a.g.name.localeCompare(b.g.name, 'ja'); });
+  else if (sortVal === 'price') list.sort(function(a,b) { return b.g.price - a.g.price; });
+  else if (sortVal === 'stock') list.sort(function(a,b) { return b.g.qty - a.g.qty; });
+  return list;
 }
 
 function renderList() {
   var el = document.getElementById('goods-list');
-  if (!goods.length) {
-    el.innerHTML = '<div class="empty-msg">まだグッズが登録されていません。<br>「＋ 登録」タブから追加してください。</div>';
-    updateSummary();
-    return;
+  var list = getFilteredGoods();
+  if (!list.length) {
+    el.innerHTML = '<div class="empty-msg">表示できるグッズがありません</div>';
+    updateSummary(); updateHiddenSection(); return;
   }
+  if (viewMode === 'grid') renderGridView(el, list);
+  else renderListView(el, list);
+  updateSummary(); updateHiddenSection();
+}
 
-  var html = '';
-  goods.forEach(function(g, i) {
+function renderGridView(el, list) {
+  var html = '<div class="goods-grid">';
+  list.forEach(function(item) {
+    var g = item.g, i = item.i;
     var imgHtml = g.img
-      ? '<img class="card-img" src="' + esc(g.img) + '" alt="">'
-      : '<div class="card-img-empty">画像<br>なし</div>';
+      ? '<img class="grid-img" src="'+esc(g.img)+'" alt="" onclick="replaceImg('+i+')">'
+      : '<div class="grid-img-empty" onclick="replaceImg('+i+')">画像なし</div>';
+    html += '<div class="grid-card'+(g.checked?' checked':'')+'">'+
+      '<div class="grid-card-top"><input type="checkbox"'+(g.checked?' checked':'')+' onchange="toggleCheck('+i+',this.checked)">'+
+      (g.fav?'<span class="heart-badge" style="font-size:12px">&#x2665;</span>':'')+
+      '</div>'+imgHtml+
+      '<div class="grid-name">'+esc(g.name)+'</div>'+
+      '<div class="grid-genre">'+esc(g.genre||'その他')+'</div>'+
+      '<div class="grid-price">&#xa5;'+g.price.toLocaleString()+'</div>'+
+      '<div class="grid-stock">在庫：'+(g.qty||0)+'個</div>'+
+      '</div>';
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
 
-    var over = g.checked && (g.transferQty || 0) > (g.qty || 0);
+function renderListView(el, list) {
+  var html = '';
+  list.forEach(function(item) {
+    var g = item.g, i = item.i;
+    var over = g.checked && (g.transferQty||0) > (g.qty||0);
+    var imgHtml = g.img
+      ? '<img class="card-img" src="'+esc(g.img)+'" alt="" onclick="replaceImg('+i+')">'
+      : '<div class="card-img-empty" onclick="replaceImg('+i+')">画像<br>なし</div>';
 
-    html += '<div class="goods-card' + (g.checked ? ' checked' : '') + '" id="card-' + g.id + '">';
+    html += '<div class="goods-card'+(g.checked?' checked':'')+'">'+
+      '<div class="card-top">'+
+      '<div class="check-area"><input type="checkbox"'+(g.checked?' checked':'')+' onchange="toggleCheck('+i+',this.checked)"></div>'+
+      imgHtml+
+      '<div class="card-meta">'+
+      '<div class="card-name">'+esc(g.name)+
+      (g.fav?' <span class="heart-badge">&#x2665;</span>':'')+
+      ' <span class="genre-badge">'+esc(g.genre||'その他')+'</span>'+
+      '</div>'+
+      (g.desc?'<div class="card-desc">'+esc(g.desc)+'</div>':'')+
+      '<div class="card-price">&#xa5;'+g.price.toLocaleString()+'</div>'+
+      '</div></div>';
 
-    // 上部：チェック＋画像＋情報
-    html += '<div class="card-top">';
-    html += '<div class="check-area">';
-    html += '<input type="checkbox" ' + (g.checked ? 'checked' : '') + ' onchange="toggleCheck(' + i + ',this.checked)">';
+    // 在庫 ＋／－
+    html += '<div class="qty-row">'+
+      '<span class="qty-label">在庫数</span>'+
+      '<button class="qty-btn" onclick="changeQty('+i+',-1)">&#8722;</button>'+
+      '<input class="qty-input" type="number" value="'+(g.qty||0)+'" min="0" inputmode="numeric" onchange="updateQty('+i+',this.value)">'+
+      '<button class="qty-btn" onclick="changeQty('+i+',1)">&#43;</button>'+
+      '</div>';
+
+    // メモ（トグル）
+    html += '<button class="toggle-btn" onclick="toggleMemo('+i+')">'+(g.memoOpen?'&#9660;':'&#9654;')+' メモ欄</button>'+
+      '<div class="collapsible'+(g.memoOpen?'':' closed')+'">'+
+      '<textarea class="memo-textarea" placeholder="自由メモ" onchange="updateMemo('+i+',this.value)">'+esc(g.memo||'')+'</textarea>'+
+      '</div>';
+
+    // 譲渡先詳細（複数・トグル）
+    html += '<button class="toggle-btn" onclick="toggleTransferDetail('+i+')">'+(g.transferOpen?'&#9660;':'&#9654;')+' ＋譲渡先 詳細を追加</button>';
+    html += '<div class="collapsible'+(g.transferOpen?'':' closed')+'">';
+    var transfers = g.transfers || [];
+    transfers.forEach(function(t, ti) {
+      html += '<div class="transfer-block">'+
+        '<div class="transfer-block-header">'+circleNum(ti)+'</div>'+
+        // 取引日・時間・数量を横並び
+        '<div class="transfer-field-row">'+
+          '<span class="transfer-field-label">取引日</span>'+
+          '<input class="transfer-date-input" type="date" value="'+esc(t.date||'')+'" onchange="updateTransferField('+i+','+ti+',\'date\',this.value)">'+
+          '<input class="transfer-time-input" type="time" value="'+esc(t.time||'')+'" onchange="updateTransferField('+i+','+ti+',\'time\',this.value)">'+
+          '<select class="transfer-qty-sel" onchange="updateTransferField('+i+','+ti+',\'tqty\',this.value)">'+
+          (function(){var o='';for(var q=1;q<=99;q++){o+='<option value="'+q+'"'+(parseInt(t.tqty||1)===q?' selected':'')+'>'+q+'個</option>';}return o;})()+
+          '</select>'+
+        '</div>'+
+        // 取引種別ラジオ
+        '<div class="transfer-type-row">'+
+          '<label class="transfer-type-label"><input type="radio" name="ttype_'+i+'_'+ti+'" value="対面取引"'+((!t.ttype||t.ttype==='対面取引')?' checked':'')+' onchange="updateTransferField('+i+','+ti+',\'ttype\',this.value)"> 対面取引</label>'+
+          '<label class="transfer-type-label"><input type="radio" name="ttype_'+i+'_'+ti+'" value="郵送取引"'+(t.ttype==='郵送取引'?' checked':'')+' onchange="updateTransferField('+i+','+ti+',\'ttype\',this.value)"> 郵送取引</label>'+
+          '<label class="transfer-type-label"><input type="radio" name="ttype_'+i+'_'+ti+'" value="その他"'+(t.ttype==='その他'?' checked':'')+' onchange="updateTransferField('+i+','+ti+',\'ttype\',this.value)"> その他</label>'+
+        '</div>'+
+        // 相手名
+        '<div class="transfer-field-row">'+
+          '<span class="transfer-field-label">相手名</span>'+
+          '<input class="transfer-name-input" type="text" placeholder="取引相手名" value="'+esc(t.name||'')+'" onchange="updateTransferField('+i+','+ti+',\'name\',this.value)">'+
+        '</div>'+
+        // URL
+        '<div class="transfer-field-row">'+
+          '<span class="transfer-field-label">URL</span>'+
+          '<input class="transfer-url-input" type="url" placeholder="Twitter URL" value="'+esc(t.url||'')+'" onchange="updateTransferField('+i+','+ti+',\'url\',this.value)" inputmode="url">'+
+          (t.url?'<a class="url-open-btn" href="'+esc(t.url)+'" target="_blank">&#8594;</a>':'')+
+        '</div>'+
+        // メモ
+        '<div class="transfer-field-row" style="align-items:flex-start">'+
+          '<span class="transfer-field-label" style="margin-top:8px">メモ</span>'+
+          '<textarea class="transfer-memo-input" placeholder="例：○○劇場前、××も合わせて取引" onchange="updateTransferField('+i+','+ti+',\'tmemo\',this.value)">'+esc(t.tmemo||'')+'</textarea>'+
+        '</div>'+
+        '<button class="transfer-remove-btn" onclick="removeTransfer('+i+','+ti+')">この欄を削除</button>'+
+      '</div>';
+    });
+    html += '<button class="add-transfer-btn" onclick="addTransfer('+i+')">＋ 譲渡先を追加</button>';
     html += '</div>';
-    html += imgHtml;
-    html += '<div class="card-meta">';
-    html += '<div class="card-name">' + esc(g.name) + '</div>';
-    if (g.desc) html += '<div class="card-desc">' + esc(g.desc) + '</div>';
-    html += '<div class="card-price">¥' + g.price.toLocaleString() + '</div>';
-    html += '</div></div>';
 
-    // 在庫フィールド
-    html += '<div class="field-row">';
-    html += '<span class="field-label">在庫数</span>';
-    html += '<div class="field-input"><input type="number" value="' + (g.qty || 0) + '" min="0" inputmode="numeric" onchange="updateQty(' + i + ',this.value)"></div>';
-    html += '</div>';
-
-    // メモフィールド
-    html += '<div class="field-row" style="align-items:flex-start">';
-    html += '<span class="field-label" style="margin-top:8px">メモ</span>';
-    html += '<div class="field-input"><textarea onchange="updateMemo(' + i + ',this.value)" placeholder="譲渡先など">' + esc(g.memo || '') + '</textarea></div>';
-    html += '</div>';
-
-    // チェック時の譲渡セクション
+    // チェック時の譲渡数量
     if (g.checked) {
-      html += '<div class="transfer-section">';
-      html += '<div class="transfer-title">譲渡数量（合計計算用）</div>';
-      html += '<div class="transfer-row">';
-      html += '<input class="transfer-qty-input' + (over ? ' over' : '') + '" type="number" value="' + (g.transferQty || 1) + '" min="0" inputmode="numeric" onchange="updateTransfer(' + i + ',this.value)">';
-      html += '<span class="transfer-stock-info">個　（在庫：' + (g.qty || 0) + '個）</span>';
-      html += '</div>';
-      if (over) html += '<div class="over-msg">⚠ 在庫数を超えています</div>';
-      html += '</div>';
+      html += '<div class="transfer-section">'+
+        '<div class="transfer-title">譲渡数量（合計計算用）</div>'+
+        '<div class="transfer-row">'+
+        '<input class="transfer-qty-input'+(over?' over':'')+'" type="number" value="'+(g.transferQty||1)+'" min="0" inputmode="numeric" onchange="updateTransfer('+i+',this.value)">'+
+        '<span class="transfer-stock-info">個&#12288;（在庫：'+(g.qty||0)+'個）</span>'+
+        '</div>'+
+        (over?'<div class="over-msg">&#9888; 在庫数を超えています</div>':'')+
+        '</div>';
     }
 
-    html += '<button class="delete-btn" onclick="deleteGoods(' + i + ')">削除する</button>';
-    html += '</div>';
+    html += '<div class="card-actions">'+
+      '<button class="edit-btn" onclick="openEdit('+i+')">編集</button>'+
+      '<button class="hide-btn" onclick="hideGoods('+i+')">非表示</button>'+
+      '<button class="delete-btn" onclick="deleteGoods('+i+')">削除</button>'+
+      '</div></div>';
   });
-
   el.innerHTML = html;
-  updateSummary();
+}
+
+// 譲渡先操作
+function addTransfer(i) {
+  if (!goods[i].transfers) goods[i].transfers = [];
+  goods[i].transfers.push({ date: '', time: '', tqty: 1, ttype: '対面取引', name: '', url: '', tmemo: '' });
+  goods[i].transferOpen = true;
+  saveGoods(); renderList();
+}
+
+function removeTransfer(i, ti) {
+  goods[i].transfers.splice(ti, 1);
+  saveGoods(); renderList();
+}
+
+function updateTransferField(i, ti, field, val) {
+  if (!goods[i].transfers[ti]) return;
+  goods[i].transfers[ti][field] = val;
+  saveGoods();
+  if (field === 'url') renderList();
+}
+
+function updateHiddenSection() {
+  var hidden = goods.filter(function(g) { return g.hidden; });
+  var sec = document.getElementById('hidden-section');
+  var sel = document.getElementById('hidden-select');
+  if (!hidden.length) { sec.style.display = 'none'; return; }
+  sec.style.display = 'block';
+  sel.innerHTML = '<option value="">選択してください</option>' +
+    hidden.map(function(g) {
+      return '<option value="'+g.id+'">'+esc(g.name)+'('+esc(g.genre||'その他')+')'+'</option>';
+    }).join('');
+}
+
+function restoreGoods() {
+  var id = parseInt(document.getElementById('hidden-select').value);
+  if (!id) return;
+  var g = goods.find(function(x) { return x.id === id; });
+  if (g) { g.hidden = false; saveGoods(); renderList(); }
+}
+
+function hideGoods(i) {
+  goods[i].hidden = true; goods[i].checked = false;
+  saveGoods(); renderList();
+}
+
+function deleteAll() {
+  if (!confirm('本当に全データを削除しますか？\nこの操作は元に戻せません。')) return;
+  goods = []; saveGoods(); renderList();
+}
+
+function openEdit(i) {
+  editIdx = i;
+  var g = goods[i];
+  document.getElementById('edit-name').value = g.name || '';
+  document.getElementById('edit-desc').value = g.desc || '';
+  document.getElementById('edit-price').value = g.price || 0;
+  document.getElementById('edit-fav').checked = !!g.fav;
+  var genreEl = document.querySelector('input[name="edit-genre"][value="'+(g.genre||'その他')+'"]');
+  if (genreEl) genreEl.checked = true;
+  document.getElementById('edit-modal').classList.add('open');
+}
+
+function closeEditModal(e) { if (e.target === document.getElementById('edit-modal')) closeModal(); }
+function closeModal() { document.getElementById('edit-modal').classList.remove('open'); editIdx = null; }
+
+function saveEdit() {
+  if (editIdx === null) return;
+  var name = document.getElementById('edit-name').value.trim();
+  if (!name) { alert('キャラクター名を入力してください'); return; }
+  var genreEl = document.querySelector('input[name="edit-genre"]:checked');
+  goods[editIdx].name = name;
+  goods[editIdx].desc = document.getElementById('edit-desc').value.trim();
+  goods[editIdx].price = parseInt(document.getElementById('edit-price').value) || 0;
+  goods[editIdx].fav = document.getElementById('edit-fav').checked;
+  goods[editIdx].genre = genreEl ? genreEl.value : 'その他';
+  saveGoods(); closeModal(); renderList();
 }
 
 function toggleCheck(i, v) {
   goods[i].checked = v;
   if (!v) goods[i].transferQty = 1;
-  saveGoods();
-  renderList();
+  saveGoods(); renderList();
+}
+
+function changeQty(i, delta) {
+  goods[i].qty = Math.max(0, (goods[i].qty || 0) + delta);
+  saveGoods(); renderList();
 }
 
 function updateQty(i, v) {
-  goods[i].qty = parseInt(v) || 0;
-  saveGoods();
-  updateSummary();
+  goods[i].qty = Math.max(0, parseInt(v) || 0);
+  saveGoods(); updateSummary();
 }
 
-function updateMemo(i, v) {
-  goods[i].memo = v;
-  saveGoods();
-}
+function toggleMemo(i) { goods[i].memoOpen = !goods[i].memoOpen; saveGoods(); renderList(); }
+function toggleTransferDetail(i) { goods[i].transferOpen = !goods[i].transferOpen; saveGoods(); renderList(); }
+function updateMemo(i, v) { goods[i].memo = v; saveGoods(); }
 
 function updateTransfer(i, v) {
   goods[i].transferQty = parseInt(v) || 0;
-  saveGoods();
-  renderList();
+  saveGoods(); renderList();
 }
 
 function deleteGoods(i) {
-  if (!confirm('「' + goods[i].name + '」を削除しますか？')) return;
-  goods.splice(i, 1);
-  saveGoods();
-  renderList();
+  if (!confirm('「'+goods[i].name+'」を削除しますか？')) return;
+  goods.splice(i, 1); saveGoods(); renderList();
 }
 
 function updateSummary() {
@@ -756,34 +745,25 @@ function updateSummary() {
   var total = checked.reduce(function(s, g) { return s + g.price * (g.transferQty || 1); }, 0);
   document.getElementById('summary-amount').textContent = '¥' + total.toLocaleString();
   document.getElementById('summary-items').innerHTML = checked.map(function(g) {
-    return esc(g.name) + ' × ' + (g.transferQty || 1) + '個 ＝ ¥' + (g.price * (g.transferQty || 1)).toLocaleString();
+    return esc(g.name) + ' × ' + (g.transferQty||1) + '個 ＝ ¥' + (g.price * (g.transferQty||1)).toLocaleString();
   }).join('<br>');
 }
-
-loadGoods();
-renderList();
 
 function renderShare() {
   var checked = goods.filter(function(g) { return g.checked; });
   var wrap = document.getElementById('share-grid-wrap');
   if (!checked.length) {
     wrap.innerHTML = '<div class="share-empty">一覧タブでチェックを入れた<br>グッズがここに表示されます</div>';
-    document.getElementById('share-copy-text').value = '';
-    return;
+    document.getElementById('share-copy-text').value = ''; return;
   }
   var html = '<div class="share-grid">';
   checked.forEach(function(g) {
     var qty = g.transferQty || 1;
-    var dots = '';
-    for (var i = 0; i < qty; i++) dots += '⚫';
-    var imgHtml = g.img
-      ? '<img class="share-img" src="' + esc(g.img) + '" alt="">'
-      : '<div class="share-img-empty">画像なし</div>';
-    html += '<div class="share-item">' + imgHtml + '<div class="share-qty">個数×' + qty + '</div></div>';
+    var imgHtml = g.img ? '<img class="share-img" src="'+esc(g.img)+'" alt="">' : '<div class="share-img-empty">画像なし</div>';
+    html += '<div class="share-item">'+imgHtml+'<div class="share-qty">個数×'+qty+'</div></div>';
   });
   html += '</div>';
   wrap.innerHTML = html;
-
   var names = checked.map(function(g) { return g.name; });
   var unique = names.filter(function(n, i) { return names.indexOf(n) === i; });
   document.getElementById('share-copy-text').value = unique.join('、');
@@ -793,15 +773,17 @@ function copyText() {
   var ta = document.getElementById('share-copy-text');
   if (!ta.value) { alert('コピーするテキストがありません'); return; }
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(ta.value).then(function() {
-      alert('コピーしました！');
-    }).catch(function() {
-      ta.select(); document.execCommand('copy'); alert('コピーしました！');
-    });
-  } else {
-    ta.select(); document.execCommand('copy'); alert('コピーしました！');
-  }
+    navigator.clipboard.writeText(ta.value).then(function() { alert('コピーしました！'); }).catch(function() { ta.select(); document.execCommand('copy'); alert('コピーしました！'); });
+  } else { ta.select(); document.execCommand('copy'); alert('コピーしました！'); }
 }
+
+(function migrate() {
+  var old = localStorage.getItem('goods_mgr_v1');
+  if (old && !localStorage.getItem('goods_mgr_v2')) { localStorage.setItem('goods_mgr_v2', old); }
+})();
+
+loadGoods();
+renderList();
 </script>
 </body>
 </html>
